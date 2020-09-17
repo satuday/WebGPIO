@@ -26,7 +26,7 @@ def home():
 	now = datetime.datetime.now()
 	timeString = now.strftime("%Y-%m-%d %I:%M %p")
 	templateData = {
-		'title' : 'WebGPIO',
+		'title' : 'Home Light',
 		'time': timeString,
 		'rooms' : updateStates(rooms),
 		'refresh_rate' : settings['RefreshRate']*1000
@@ -38,7 +38,7 @@ def home():
 @crossdomain(origin='*')
 def grid():
 	templateData = {
-		'title' : 'WebGPIO',
+		'title' : 'Home Light',
 		'rooms' : updateStates(rooms)
 	}
 	return render_template('grid.html', **templateData)
@@ -50,13 +50,29 @@ def button(room_index, appliance_index):
 	appliance = Appliance(rooms[room_index]['Appliances'][appliance_index])
 	appliance.executeAction()
 	templateData = {
-		'title' : 'WebGPIO',
+		'title' : 'Home Light',
 		'state' : appliance.getState(),
 		'room_index' : room_index,
 		'appliance_index' : appliance_index,
 		'name' : appliance.name
 	}
 	return render_template('button.html', **templateData)
+	
+"""	
+@app.route("/api/<int:room_index>/<int:appliance_index>/<int:state>", methods=['POST'])
+@authentication.login_required
+@crossdomain(origin='*')
+def button(room_index, appliance_index, state):
+	appliance = Appliance(rooms[room_index]['Appliances'][appliance_index])
+	appliance.executeAction()
+	templateData = {
+		'state' : appliance.getState(),
+		'room_index' : room_index,
+		'appliance_index' : appliance_index,
+		'name' : appliance.name
+	}
+	return jsonify(templateData)
+"""
 
 @app.route("/login/")
 def login():

@@ -1,17 +1,34 @@
 import os, sys, yaml
 
 configPath = os.path.join(sys.path[0], "config.yml")
+dbPath 		   = os.path.join(sys.path[0], "db.yml")
+
 try:
 	with open(configPath, 'r') as ymlfile:
 	    cfg = yaml.safe_load(ymlfile)
 except Exception:
 	print("Config file not found or invalid. Please provide a valid config.yml file. See exampleconfig.yml for reference")
 	exit()
-
+try:
+	with open(dbPath, 'w+') as dbfile:
+	    db = yaml.load(dbfile)
+except Exception:
+	print("Db file not found or invalid.")
+	exit()
+	
 try:
 	rooms = cfg['Rooms']
 except Exception:
-	print("config.yml file is not valid. See exampleconfig.yml for reference")
+	print("config.yml file is currupted.")
+	exit()
+try:
+	if db is None:
+		states = {}
+	else:
+		states = db
+	print(states)
+except Exception:
+	print("db.yml file is currupted.")
 	exit()
 
 #check for older config file

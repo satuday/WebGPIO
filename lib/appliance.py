@@ -1,6 +1,6 @@
 import subprocess, time
 from lib.GPIOSetup import GPIO
-from lib.setup import settings
+from lib.setup import states, settings
 
 class Appliance:
 
@@ -11,12 +11,18 @@ class Appliance:
 		if self.type == 'GPIO':
 			self.pin = attributes['Pin']
 			self.active = attributes['ActiveState']
-		if self.type == 'Script':
+		if self.type == 'Script' or self.type == 'RF':
 			if 'Timeout' in attributes:
 				self.timeout = "timeout "+str(attributes['Timeout'])+" "
 			else:
 				self.timeout = "timeout 0.2 "
-			self.status_cmd = self.timeout + attributes['Status']
+			if self.type == 'Script':
+				self.status_cmd = self.timeout + attributes['Status']
+			if self.type == 'RF':
+				if self.name not in states:
+					self.state = attributes['Ostate']
+				else:
+					self.state = states[self.name]
 			if 'Action' in attributes:
 				self.action = True
 				self.on_cmd = attributes['Action'][True]
@@ -30,6 +36,8 @@ class Appliance:
 				return 1
 			else:
 				return 0
+		elif self.type == 'RF':
+			return self.state
 		else:
 			#get the state of other Appliances in other rooms
 			#not properly implemented yet
@@ -50,6 +58,9 @@ class Appliance:
 				return 1
 			else:
 				return 0
+		elif self.type == 'RF':
+			self.state = state
+			return 1
 
 	def executeAction(self):
 		if self.type == 'GPIO':
@@ -59,8 +70,17 @@ class Appliance:
 			if 'Duration' in self.attributes:
 				time.sleep(self.attributes['Duration'])
 				GPIO.output(self.pin, original_state)
-		if self.type == 'Script' and self.action:
+		if (self.type == 'Script' or self.type == 'RF') and self.action:
 			if self.getState():
 				subprocess.call([self.off_cmd], shell=True)
 			else:
 				subprocess.call([self.on_cmd], shell=True)
+			if self.type == 'RF':
+				self.state = abs(1 - self.state)
+				states[self.name] = self.state
+				print('{} is {}'.format(self.name, self.state))
+	
+	def saveState(self):
+		if self.type == 'RF':
+			states[self.name] = self.state
+			
